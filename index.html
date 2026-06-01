@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Event Card System V3.1</title>
+
+<style>
+:root{
+  --bg:#0b0f14;
+  --card:#111826;
+  --accent:#7cf7c2;
+  --text:#e8eef6;
+  --muted:#9aa7b2;
+  --line:rgba(255,255,255,0.08);
+}
+
+*{box-sizing:border-box;font-family:system-ui;margin:0;padding:0;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  padding:20px;
+}
+
+.wrap{width:100%;max-width:1000px;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+.panel{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  min-height:90vh;
+}
+
+h2{font-size:16px;margin-bottom:10px;color:var(--accent);}
+
+input, textarea{
+  width:100%;
+  margin-bottom:8px;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:#0e141c;
+  color:var(--text);
+}
+
+textarea{height:80px;resize:none;}
+
+.btn{
+  display:block;
+  padding:10px;
+  background:var(--accent);
+  color:#0b0f14;
+  text-align:center;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
+  border:none;
+  margin-top:6px;
+}
+
+.event{
+  border:1px solid var(--line);
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:8px;
+  cursor:pointer;
+}
+
+.event:hover{border-color:var(--accent);}
+
+.small{font-size:12px;color:var(--muted);}
+
+.cardView{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px;
+  margin-top:10px;
+  background:#0e141c;
+}
+
+a.btnlink{
+  display:block;
+  padding:10px;
+  margin-top:8px;
+  background:var(--accent);
+  color:#0b0f14;
+  text-align:center;
+  border-radius:10px;
+  text-decoration:none;
+}
+
+hr{border:0;border-top:1px solid var(--line);margin:10px 0;}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<!-- LEFT: CREATOR -->
+<div class="panel">
+<h2>➕ Tworzenie eventu</h2>
+
+<input id="title" placeholder="Nazwa eventu (np. Chrzest Zuza)">
+<input id="date" placeholder="Data">
+<input id="place" placeholder="Lokalizacja">
+
+<textarea id="desc" placeholder="Opis / notatka"></textarea>
+
+<button class="btn" onclick="createEvent()">Dodaj event</button>
+
+<hr>
+
+<h2>📂 Twoje eventy</h2>
+<div id="list"></div>
+</div>
+
+<!-- RIGHT: PREVIEW -->
+<div class="panel">
+<h2>👁 Podgląd eventu</h2>
+<div id="preview" class="small">Wybierz event</div>
+</div>
+
+</div>
+
+<script>
+
+let events = JSON.parse(localStorage.getItem("events") || "[]");
+let current = null;
+
+function save(){
+  localStorage.setItem("events", JSON.stringify(events));
+  render();
+}
+
+function createEvent(){
+  const e = {
+    id:Date.now(),
+    title:document.getElementById("title").value,
+    date:document.getElementById("date").value,
+    place:document.getElementById("place").value,
+    desc:document.getElementById("desc").value
+  };
+
+  if(!e.title) return;
+
+  events.push(e);
+  save();
+
+  document.getElementById("title").value="";
+  document.getElementById("date").value="";
+  document.getElementById("place").value="";
+  document.getElementById("desc").value="";
+}
+
+function render(){
+  const list = document.getElementById("list");
+  list.innerHTML="";
+
+  events.forEach(ev=>{
+    const div = document.createElement("div");
+    div.className="event";
+    div.innerHTML=`<b>${ev.title}</b><div class="small">${ev.date || ""}</div>`;
+    div.onclick=()=>show(ev);
+    list.appendChild(div);
+  });
+}
+
+function show(ev){
+  current = ev;
+
+  document.getElementById("preview").innerHTML = `
+    <div class="cardView">
+      <h3>${ev.title}</h3>
+      <div class="small">${ev.date}</div>
+      <div class="small">${ev.place}</div>
+      <hr>
+      <div>${ev.desc}</div>
+
+      <hr>
+
+      <a class="btnlink"
+        href="https://wa.me/48700000000?text=Potwierdzam%20obecność%20na%20${encodeURIComponent(ev.title)}"
+        target="_blank">
+        RSVP WhatsApp
+      </a>
+
+      <a class="btnlink"
+        href="https://wa.me/48700000000"
+        target="_blank">
+        Kontakt
+      </a>
+
+      <p class="small" style="margin-top:10px;">
+        system demo · localStorage · V3.1
+      </p>
+    </div>
+  `;
+}
+
+render();
+
+</script>
+
+</body>
+</html>

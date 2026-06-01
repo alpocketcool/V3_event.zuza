@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Event Viewer</title>
+
+<style>
+body{font-family:system-ui;background:#0b0f14;color:#e8eef6;display:flex;justify-content:center;padding:20px;}
+.card{max-width:600px;width:100%;background:#111826;padding:20px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);}
+.btn{display:block;background:#7cf7c2;color:#0b0f14;padding:10px;border-radius:10px;text-align:center;text-decoration:none;font-weight:600;margin-top:10px;}
+small{color:#9aa7b2;}
+hr{border:0;border-top:1px solid rgba(255,255,255,0.08);margin:12px 0;}
+</style>
+</head>
+
+<body>
+
+<div class="card" id="content">
+Loading...
+</div>
+
+<script src="app.js"></script>
+<script>
+loadEventView();
+</script>
+
+</body>
+</html>
