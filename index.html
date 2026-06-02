@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Event Card System V3.1</title>
+<title>Event System V3 FIX ARCH</title>
 
 <style>
 :root{
@@ -25,22 +25,40 @@ body{
   padding:20px;
 }
 
-.wrap{width:100%;max-width:1000px;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.wrap{width:100%;max-width:900px;}
+
+.nav{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.nav button{
+  flex:1;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#111826;
+  color:var(--text);
+  cursor:pointer;
+}
+
+.nav button.active{
+  border-color:var(--accent);
+  color:var(--accent);
+}
 
 .panel{
   background:var(--card);
   border:1px solid var(--line);
-  border-radius:16px;
+  border-radius:14px;
   padding:16px;
-  min-height:90vh;
 }
 
-h2{font-size:16px;margin-bottom:10px;color:var(--accent);}
-
-input, textarea{
+input,textarea{
   width:100%;
-  margin-bottom:8px;
   padding:10px;
+  margin-bottom:8px;
   border-radius:8px;
   border:1px solid var(--line);
   background:#0e141c;
@@ -50,49 +68,31 @@ input, textarea{
 textarea{height:80px;resize:none;}
 
 .btn{
-  display:block;
+  width:100%;
   padding:10px;
-  background:var(--accent);
-  color:#0b0f14;
-  text-align:center;
+  border:none;
   border-radius:10px;
+  background:var(--accent);
   font-weight:600;
   cursor:pointer;
-  border:none;
-  margin-top:6px;
+  color:#0b0f14;
 }
 
 .event{
-  border:1px solid var(--line);
   padding:10px;
-  border-radius:10px;
+  border:1px solid var(--line);
   margin-bottom:8px;
+  border-radius:10px;
   cursor:pointer;
 }
 
-.event:hover{border-color:var(--accent);}
+small{color:var(--muted);}
 
-.small{font-size:12px;color:var(--muted);}
-
-.cardView{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:14px;
-  margin-top:10px;
-  background:#0e141c;
-}
-
-a.btnlink{
-  display:block;
-  padding:10px;
-  margin-top:8px;
-  background:var(--accent);
-  color:#0b0f14;
-  text-align:center;
-  border-radius:10px;
+a{
+  color:var(--accent);
   text-decoration:none;
+  word-break:break-all;
 }
-
 hr{border:0;border-top:1px solid var(--line);margin:10px 0;}
 </style>
 </head>
@@ -101,28 +101,34 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0;}
 
 <div class="wrap">
 
-<!-- LEFT: CREATOR -->
-<div class="panel">
-<h2>➕ Tworzenie eventu</h2>
-
-<input id="title" placeholder="Nazwa eventu (np. Chrzest Zuza)">
-<input id="date" placeholder="Data">
-<input id="place" placeholder="Lokalizacja">
-
-<textarea id="desc" placeholder="Opis / notatka"></textarea>
-
-<button class="btn" onclick="createEvent()">Dodaj event</button>
-
-<hr>
-
-<h2>📂 Twoje eventy</h2>
-<div id="list"></div>
+<!-- NAV -->
+<div class="nav">
+  <button id="tabCreate" class="active" onclick="show('create')">➕ Create</button>
+  <button id="tabList" onclick="show('list')">📂 Events</button>
+  <button id="tabView" onclick="show('view')">👁 View</button>
 </div>
 
-<!-- RIGHT: PREVIEW -->
-<div class="panel">
-<h2>👁 Podgląd eventu</h2>
-<div id="preview" class="small">Wybierz event</div>
+<!-- CREATE -->
+<div id="create" class="panel">
+  <h3>Tworzenie eventu</h3>
+
+  <input id="title" placeholder="Nazwa eventu">
+  <input id="date" placeholder="Data">
+  <input id="place" placeholder="Lokalizacja">
+  <textarea id="desc" placeholder="Opis"></textarea>
+
+  <button class="btn" onclick="createEvent()">Utwórz event</button>
+</div>
+
+<!-- LIST -->
+<div id="list" class="panel" style="display:none;">
+  <h3>Twoje eventy</h3>
+  <div id="events"></div>
+</div>
+
+<!-- VIEW -->
+<div id="view" class="panel" style="display:none;">
+  <div id="viewer">Wybierz event</div>
 </div>
 
 </div>
@@ -131,19 +137,20 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0;}
 
 let events = JSON.parse(localStorage.getItem("events") || "[]");
 let current = null;
+let mode = "create";
 
 function save(){
   localStorage.setItem("events", JSON.stringify(events));
-  render();
+  renderList();
 }
 
 function createEvent(){
   const e = {
-    id:Date.now(),
-    title:document.getElementById("title").value,
-    date:document.getElementById("date").value,
-    place:document.getElementById("place").value,
-    desc:document.getElementById("desc").value
+    id: Date.now(),
+    title: title.value,
+    date: date.value,
+    place: place.value,
+    desc: desc.value
   };
 
   if(!e.title) return;
@@ -151,58 +158,91 @@ function createEvent(){
   events.push(e);
   save();
 
-  document.getElementById("title").value="";
-  document.getElementById("date").value="";
-  document.getElementById("place").value="";
-  document.getElementById("desc").value="";
+  title.value="";
+  date.value="";
+  place.value="";
+  desc.value="";
+
+  show('list');
 }
 
-function render(){
-  const list = document.getElementById("list");
-  list.innerHTML="";
+function renderList(){
+  const el = document.getElementById("events");
+  el.innerHTML="";
 
   events.forEach(ev=>{
     const div = document.createElement("div");
     div.className="event";
-    div.innerHTML=`<b>${ev.title}</b><div class="small">${ev.date || ""}</div>`;
-    div.onclick=()=>show(ev);
-    list.appendChild(div);
+    div.innerHTML = `<b>${ev.title}</b><br><small>${ev.date || ""}</small>`;
+
+    div.onclick=()=>{
+      current = ev;
+      loadView(ev);
+      show('view');
+    };
+
+    el.appendChild(div);
   });
 }
 
-function show(ev){
-  current = ev;
+function loadView(ev){
 
-  document.getElementById("preview").innerHTML = `
-    <div class="cardView">
-      <h3>${ev.title}</h3>
-      <div class="small">${ev.date}</div>
-      <div class="small">${ev.place}</div>
-      <hr>
-      <div>${ev.desc}</div>
+  const link = `${location.origin}${location.pathname}?id=${ev.id}`;
 
-      <hr>
+  document.getElementById("viewer").innerHTML = `
+    <h2>${ev.title}</h2>
+    <small>${ev.date || ""}</small><br>
+    <small>${ev.place || ""}</small>
 
-      <a class="btnlink"
-        href="https://wa.me/48700000000?text=Potwierdzam%20obecność%20na%20${encodeURIComponent(ev.title)}"
-        target="_blank">
-        RSVP WhatsApp
-      </a>
+    <hr>
 
-      <a class="btnlink"
-        href="https://wa.me/48700000000"
-        target="_blank">
-        Kontakt
-      </a>
+    <p>${ev.desc || ""}</p>
 
-      <p class="small" style="margin-top:10px;">
-        system demo · localStorage · V3.1
-      </p>
-    </div>
+    <hr>
+
+    <b>Share link:</b><br>
+    <a href="${link}" target="_blank">${link}</a>
+
+    <hr>
+
+    <a href="https://wa.me/48700000000?text=Potwierdzam%20udział%20w%20${encodeURIComponent(ev.title)}">
+      ✔ RSVP WhatsApp
+    </a>
   `;
 }
 
-render();
+function show(tab){
+
+  mode = tab;
+
+  document.getElementById("create").style.display = tab==='create'?'block':'none';
+  document.getElementById("list").style.display = tab==='list'?'block':'none';
+  document.getElementById("view").style.display = tab==='view'?'block':'none';
+
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+
+  if(tab==='create') tabCreate.classList.add("active");
+  if(tab==='list') tabList.classList.add("active");
+  if(tab==='view') tabView.classList.add("active");
+}
+
+function loadFromURL(){
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+
+  if(!id) return;
+
+  const ev = events.find(e=>e.id == id);
+
+  if(ev){
+    current = ev;
+    loadView(ev);
+    show('view');
+  }
+}
+
+renderList();
+loadFromURL();
 
 </script>
 
